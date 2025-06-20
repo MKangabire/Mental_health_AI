@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="{% if session.theme == 'dark' %}dark{% endif %}">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mindful Chat</title>
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="logo">♥</div>
+      <div class="title-section">
+        <h1>Mindful Chat</h1>
+        <p>Your caring companion</p>
+      </div>
+    </div>
+    <button id="theme-toggle"><span id="theme-icon">🌙</span></button>
+  </header>
+
+  <!-- Chat Window -->
+  <main id="chat-window" role="log">
+    <!-- Example bot message -->
+    <div class="message bot-message message-bubble">
+      <p>Hello! I’m here to help you with your feelings. What’s on your mind?</p>
+      <span class="time" data-timestamp>{{ 'now'|date:'H:i' }}</span>
+    </div>
+  </main>
+
+  <!-- Input -->
+  <footer>
+    <div class="message-input-wrapper">
+      <textarea id="message-input"
+                placeholder="Share what's on your mind..."
+                maxlength="500"
+                rows="2"></textarea>
+      <span id="char-count">0/500</span>
+    </div>
+    <button id="send-button" disabled>Send</button>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatWindow = document.getElementById('chat-window');
+      const messageInput = document.getElementById('message-input');
+      const sendButton = document.getElementById('send-button');
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeIcon = document.getElementById('theme-icon');
+      const charCount = document.getElementById('char-count');
+
+      // Initialize theme
+      if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+        themeIcon.textContent = '☀️';
+      } else {
+        themeIcon.textContent = '🌙';
+      }
+
+      const scrollToBottom = () => {
+        chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+      };
+      const updateTimestamps = () => {
+        document.querySelectorAll('[data-timestamp]').forEach(el => {
+          const time = new Date();
+          el.textContent = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        });
+      };
+      updateTimestamps();
+
+      themeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        themeIcon.textContent = isDark ? '☀️' : '🌙';
+      });
+
+      messageInput.addEventListener('input', () => {
+        const length = messageInput.value.length;
+        charCount.textContent = `${length}/500`;
+        sendButton.disabled = length === 0 || length > 500;
+      });
+
+      const sendMessage = async () => {
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        const userMessage = document.createElement('div');
+        userMessage.className = 'message-bubble flex justify-end';
+        userMessage.innerHTML = `
+          <p>${text}</p>
+          <span class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        `;
+        chatWindow.appendChild(userMessage);
+
+        messageInput.value = '';
+        charCount.textContent = '0/500';
+        sendButton.disabled = true;
+        scrollToBottom();
+
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'message-bubble flex justify-start';
+        typingIndicator.innerHTML = `
+          <p>Thinking</p>
+          <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        `;
+        chatWindow.appendChild(typingIndicator);
+        scrollToBottom();
+
+        try {
+          const response = await axios.post('http://localhost:8000/generate', {
+            user_input: text
+          }, { headers: { 'Content-Type': 'application/json' } });
+
+          typingIndicator.remove();
+
+          const botMessage = document.createElement('div');
+          botMessage.className = 'message-bubble flex justify-start';
+          botMessage.innerHTML = `
+            <p>${response.data.bot_response}</p>
+            <span class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          `;
+          chatWindow.appendChild(botMessage);
+          scrollToBottom();
+        } catch (error) {
+          typingIndicator.remove();
+          const errorMessage = document.createElement('div');
+          errorMessage.className = 'message-bubble flex justify-start';
+          errorMessage.innerHTML = `
+            <p>Sorry, I couldn’t respond. Please try again.</p>
+          `;
+          chatWindow.appendChild(errorMessage);
+          scrollToBottom();
+        }
+      };
+
+      sendButton.addEventListener('click', sendMessage);
+      messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+chatbot/
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+*/venv/
+*/env/
+
+# Django specific
+myproject/db.sqlite3
+myproject/media/
+myproject/staticfiles/
+myproject/*.log
+
+# Model directories (optional, if present)
+final_model/
+final_model/final/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other
+*.bak
+*.swp
