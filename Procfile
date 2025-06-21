@@ -1,2 +1,2 @@
 release: python myproject/manage.py migrate
-web: gunicorn myproject.wsgi:application --bind 0.0.0.0:$PORT
+web: uvicorn myproject.asgi:application --host 0.0.0.0 --port $PORT
