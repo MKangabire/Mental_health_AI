@@ -4,7 +4,206 @@
 <head>
   <meta charset="UTF-8" />
   <title>Mindful Chat</title>
-  <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #f0f4ff; /* Soft lavender background */
+      --text-color: #2d2d2d; /* Dark gray text */
+      --bot-bg: #6ab0ff; /* Vivid sky blue for bot messages */
+      --user-bg: #ff7f7f; /* Warm coral for user messages */
+      --input-bg: #ffffff; /* White input background */
+      --input-border: #ff6f91; /* Bright pink input border */
+      --button-bg: #ff4d88; /* Bold magenta button */
+      --button-hover: #e04378; /* Darker magenta on hover */
+      --button-disabled: #d3d3d3; /* Light gray for disabled */
+      --header-bg: linear-gradient(135deg, #7b61ff, #ff6f91); /* Colorful gradient header */
+      --border-color: #d1c4e9; /* Light purple border */
+      --instructions-bg: #b2ffda; /* Mint green for instructions */
+    }
+    .dark {
+      --bg-color: #1c2526; /* Deep teal background */
+      --text-color: #e0e0e0; /* Light gray text */
+      --bot-bg: #3b82f6; /* Deep blue for bot messages */
+      --user-bg: #f87171; /* Darker coral for user messages */
+      --input-bg: #374151; /* Dark gray input background */
+      --input-border: #f472b6; /* Pink input border */
+      --button-bg: #ec4899; /* Vibrant pink button */
+      --button-hover: #db2777; /* Darker pink on hover */
+      --button-disabled: #6b7280; /* Gray for disabled */
+      --header-bg: linear-gradient(135deg, #5b21b6, #db2777); /* Darker gradient header */
+      --border-color: #6b7280; /* Dark gray border */
+      --instructions-bg: #34d399; /* Darker mint for instructions */
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: var(--header-bg);
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo {
+      font-size: 2rem;
+      color: #ffffff; /* White logo for contrast */
+    }
+    .title-section h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #ffffff; /* White text for header */
+    }
+    .title-section p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #e2e8f0; /* Light gray subtitle */
+    }
+    #theme-toggle {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #ffffff; /* White icon */
+    }
+    main#chat-window {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .message-bubble {
+      max-width: 70%;
+      padding: 0.75rem;
+      border-radius: 12px;
+      margin: 0.5rem;
+      position: relative;
+    }
+    .message-bubble.flex.justify-start {
+      background: var(--bot-bg);
+      align-self: flex-start;
+    }
+    .message-bubble.flex.justify-end {
+      background: var(--user-bg);
+      align-self: flex-end;
+    }
+    .message-bubble p {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.4;
+      color: var(--text-color);
+    }
+    .message-bubble .time {
+      font-size: 0.75rem;
+      color: #f1f5f9; /* Light gray for time */
+      display: block;
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+    .message-bubble::before {
+      content: '🤖';
+      position: absolute;
+      left: -1.5rem;
+      top: 0.5rem;
+      font-size: 1rem;
+      display: none;
+      color: #ffffff; /* White bot icon */
+    }
+    .message-bubble.flex.justify-start::before {
+      display: block;
+    }
+    .typing-indicator {
+      display: flex;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background: #f1f5f9; /* Light gray dots */
+      border-radius: 50%;
+      animation: blink 1.4s infinite both;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; }
+      20% { opacity: 1; }
+    }
+    footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      background: var(--header-bg);
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .message-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+    #message-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--input-border);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      resize: none;
+      font-size: 1rem;
+    }
+    #message-input:focus {
+      outline: none;
+      border-color: #a78bfa; /* Vibrant purple on focus */
+    }
+    #char-count {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.75rem;
+      font-size: 0.8rem;
+      color: #6b7280; /* Gray for char count */
+    }
+    #send-button {
+      padding: 0.75rem 1.5rem;
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    #send-button:hover:not(:disabled) {
+      background: var(--button-hover);
+    }
+    #send-button:disabled {
+      background: var(--button-disabled);
+      cursor: not-allowed;
+    }
+    #instructions {
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-color);
+      text-align: center;
+      background: var(--instructions-bg);
+      border-radius: 8px;
+      margin: 0.5rem;
+    }
+  </style>
 </head>
 <body>
 
@@ -17,13 +216,18 @@
         <p>Your caring companion</p>
       </div>
     </div>
-    <button id="theme-toggle"><span id="theme-icon">🌙</span></button>
+    <button id="theme-toggle" aria-label="Toggle dark/light theme"><span id="theme-icon">🌙</span></button>
   </header>
 
+  <!-- Instructions -->
+  <div id="instructions">
+    Type your message below and press Enter or click Send to chat. I’ll respond with supportive advice. Max 500 characters.
+  </div>
+
   <!-- Chat Window -->
-  <main id="chat-window" role="log">
+  <main id="chat-window" role="log" aria-live="polite">
     <!-- Example bot message -->
-    <div class="message bot-message message-bubble">
+    <div class="message bot-message message-bubble flex justify-start">
       <p>Hello! I’m here to help you with your feelings. What’s on your mind?</p>
       <span class="time" data-timestamp>{{ 'now'|date:'H:i' }}</span>
     </div>
@@ -33,12 +237,13 @@
   <footer>
     <div class="message-input-wrapper">
       <textarea id="message-input"
-                placeholder="Share what's on your mind..."
+                placeholder="Type your feelings here and press Enter or Send..."
                 maxlength="500"
-                rows="2"></textarea>
+                rows="2"
+                aria-label="Enter your message"></textarea>
       <span id="char-count">0/500</span>
     </div>
-    <button id="send-button" disabled>Send</button>
+    <button id="send-button" disabled aria-label="Send message">Send</button>
   </footer>
 
   <!-- Scripts -->
@@ -139,6 +344,7 @@
           chatWindow.appendChild(errorMessage);
           scrollToBottom();
         }
+        messageInput.focus(); // Return focus to textarea
       };
 
       sendButton.addEventListener('click', sendMessage);
